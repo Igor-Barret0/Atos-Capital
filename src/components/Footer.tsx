@@ -1,10 +1,18 @@
 import React from 'react';
-import { FooterProps, SocialLink } from '../types';
 import { Button } from './ui/button';
 import { Globe, Linkedin, Instagram } from 'lucide-react';
 
-const Footer: React.FC<FooterProps> = ({ darkMode }) => {
+interface FooterProps {
+  darkMode: boolean;
+}
 
+interface SocialLink {
+  icon: React.ReactNode;
+  href: string;
+  label: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ darkMode }) => {
   const socialLinks: SocialLink[] = [
     {
       icon: <Globe className="w-5 h-5" />,
@@ -24,7 +32,7 @@ const Footer: React.FC<FooterProps> = ({ darkMode }) => {
   ];
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-[#1a1a1a] border-t border-gray-200 dark:border-[#404040]">
+    <footer className="w-full bg-white dark:bg-[#1a1a1a] border-t border-gray-200 dark:border-[#404040] py-3">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-3 md:mb-0">
@@ -42,6 +50,7 @@ const Footer: React.FC<FooterProps> = ({ darkMode }) => {
                 variant="ghost"
                 size="icon"
                 asChild
+                className="hover:bg-transparent"
               >
                 <a
                   href={social.href}

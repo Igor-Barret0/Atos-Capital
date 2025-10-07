@@ -67,6 +67,48 @@ npm run start    # Servidor de produção
 npm run lint     # Linting do código
 ```
 
+## 📊 Gráficos Interativos
+
+A aplicação inclui diversos tipos de gráficos interativos para visualização de dados:
+
+### Tipos de Gráficos Disponíveis
+
+1. **Gráfico de Pizza**
+   - Visualização de distribuição percentual
+   - Drill-down para detalhamento por categoria
+   - Cores personalizadas por tema (claro/escuro)
+   - Exportação para Excel e PNG
+
+2. **Gráfico de Linhas**
+   - Visualização de tendências ao longo do tempo
+   - Dados de faturamento anual
+   - Tooltips interativos com valores detalhados
+   - Exportação para Excel e PNG
+
+3. **Gráfico de Barras**
+   - Comparação entre diferentes categorias
+   - Drill-down para visualização mensal
+   - Eixos X e Y personalizáveis
+   - Exportação para Excel e PNG
+
+4. **Gráfico de Dispersão**
+   - Análise de correlação entre variáveis
+   - Linha de regressão para análise de tendência
+   - Pontos interativos com informações detalhadas
+   - Exportação para Excel e PNG
+
+### Recursos dos Gráficos
+
+- **Tema Escuro/Claro**: Ajuste automático das cores
+- **Responsivo**: Adapta-se a diferentes tamanhos de tela
+- **Interatividade**:
+  - Zoom e panorâmica
+  - Tooltips informativos
+  - Drill-down para detalhamento
+- **Exportação**:
+  - Excel (XLSX) com dados estruturados
+  - Imagem (PNG) em alta resolução
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -75,6 +117,9 @@ npm run lint     # Linting do código
 │   └── page.tsx                 # Página inicial
 ├── src/
 │   ├── components/              # Componentes React
+│   │   ├── charts/              # Componentes de Gráficos
+│   │   │   ├── MockedChart.tsx  # Componente principal de gráficos
+│   │   │   └── types.ts         # Tipos para os gráficos
 │   │   ├── ui/                  # Componentes Shadcn UI
 │   │   │   └── button.tsx       # Componente Button customizado
 │   │   ├── Header.tsx           # Cabeçalho com toggle dark/light

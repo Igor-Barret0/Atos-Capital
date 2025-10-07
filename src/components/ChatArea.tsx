@@ -1,61 +1,226 @@
-import React from 'react';
-import { ChatAreaProps } from '../types';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { Message } from '../types';
+import MockedChart from './charts/MockedChart';
 
-const ChatArea: React.FC<ChatAreaProps> = ({ messages, darkMode }) => {
-  const isUser = (sender: string): boolean => sender === 'user';
+interface ChatAreaProps {
+  messages: Message[];
+  darkMode: boolean;
+}
+
+// Componente de mensagem individual para melhor desempenho
+const MessageItem = React.memo(({ 
+  message, 
+  isUserMessage, 
+  isLastMessage,
+  darkMode 
+}: { 
+  message: Message; 
+  isUserMessage: boolean; 
+  isLastMessage: boolean;
+  darkMode: boolean;
+}) => {
+  const messageEndRef = useRef<HTMLDivElement>(null);
+  
+  // Efeito para rolagem suave apenas para a última mensagem
+  useEffect(() => {
+    if (isLastMessage && messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isLastMessage]);
+
+  const renderContent = useCallback((text: string) => {
+    if (!text) return null;
+    
+    if (typeof text === 'string' && text.startsWith('[CHART:') && text.endsWith(']')) {
+      return <MockedChart chartType={text.slice(7, -1) as any} />;
+    }
+    
+    return String(text).split('\n').map((line: string, i: number) => (
+      <p key={i} className="mb-1 last:mb-0">
+        {line}
+      </p>
+    ));
+  }, []);
 
   return (
-    <div className="w-full">
-      {messages.length === 0 ? (
-        <div className="text-center max-w-2xl mx-auto py-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-3">
-            Bem-vindo ao Chat da Atos Capital
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
-            Como posso ajudar você hoje? Estou aqui para responder suas perguntas sobre investimentos e serviços financeiros.
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-4 p-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${isUser(message.sender) ? 'justify-end' : 'justify-start'}`}
+    <div 
+      ref={isLastMessage ? messageEndRef : null}
+      className={`flex items-start mb-4 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+    >
+      {!isUserMessage && (
+        <div className="flex-shrink-0 mr-3 mt-1">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <svg 
+              className="w-5 h-5 text-gray-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
             >
-              <div className={`flex max-w-3xl items-start gap-2 ${isUser(message.sender) ? 'ml-auto' : ''}`}>
-                {!isUser(message.sender) && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                    </svg>
-                  </div>
-                )}
-                <div
-                  className={`px-4 py-3 rounded-2xl ${
-                    isUser(message.sender)
-                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-tr-none'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-tl-none'
-                  }`}
-                >
-                  <p className="text-sm md:text-base">{message.text}</p>
-                  <p className="text-xs mt-1 opacity-70 text-right">
-                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                {isUser(message.sender) && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-[80%] rounded-lg">
+        <div className={`rounded-lg px-4 py-2 bg-white border border-gray-200 ${
+          isUserMessage 
+            ? 'text-gray-800' 
+            : 'text-gray-800'
+        }`}>
+          {renderContent(message.text)}
+        </div>
+      </div>
+      
+      {isUserMessage && (
+        <div className="flex-shrink-0 ml-2 mt-1">
+          <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center">
+            <svg 
+              className="w-4 h-4 text-gray-700" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+              />
+            </svg>
+          </div>
         </div>
       )}
     </div>
   );
-};
+});
+
+MessageItem.displayName = 'MessageItem';
+
+const ChatArea: React.FC<ChatAreaProps> = React.memo(({ messages, darkMode }) => {
+  console.log('=== ChatArea renderizado ===');
+  console.log('Mensagens recebidas:', JSON.parse(JSON.stringify(messages || [])));
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  console.log('ChatArea renderizado com mensagens:', messages);
+  
+  const isUser = useCallback((sender: string) => {
+    const isUser = sender === 'user';
+    console.log('Verificando se é usuário:', sender, isUser);
+    return isUser;
+  }, []);
+
+  // Efeito para garantir que o scroll fique no final quando novas mensagens forem adicionadas
+  useEffect(() => {
+    console.log('Efeito de mensagens ativado. Total de mensagens:', messages?.length || 0);
+    console.log('Conteúdo das mensagens:', messages);
+    
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      console.log('Dimensões do container:', { scrollHeight, clientHeight });
+      
+      // Força um reflow para garantir que o scroll seja aplicado corretamente
+      const scrollToBottom = () => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+          console.log('Scroll ajustado para o final');
+        }
+      };
+      
+      // Usa requestAnimationFrame para garantir que o DOM foi atualizado
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    }
+  }, [messages]);
+
+  const renderWelcomeMessage = useCallback(() => (
+    <div className="text-center py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-3">
+        Bem-vindo ao Chat da Atos Capital
+      </h1>
+      <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
+        Como posso ajudar você hoje? Estou aqui para responder suas perguntas sobre investimentos e serviços financeiros.
+      </p>
+    </div>
+  ), []);
+
+  const renderMessages = useMemo(() => {
+    console.log('Iniciando renderização de mensagens. Total:', messages?.length || 0);
+    
+    if (!messages || messages.length === 0) {
+      console.log('Nenhuma mensagem para exibir, mostrando mensagem de boas-vindas');
+      return renderWelcomeMessage();
+    }
+
+    console.log(`Renderizando ${messages.length} mensagens:`, messages);
+    
+    return (
+      <div className="space-y-4 py-2">
+        {messages.map((message, index) => {
+          if (!message) {
+            console.warn('Mensagem inválida no índice', index);
+            return null;
+          }
+          
+          console.log(`Renderizando mensagem ${index + 1}/${messages.length}:`, {
+            id: message.id,
+            text: message.text,
+            sender: message.sender,
+            timestamp: message.timestamp
+          });
+          
+          const isLast = index === messages.length - 1;
+          const isUserMsg = message.sender === 'user';
+          
+          console.log(`Mensagem ${index + 1}/${messages.length}:`, {
+            id: message.id,
+            text: message.text,
+            sender: message.sender,
+            isUser: isUserMsg,
+            isLast
+          });
+          
+          return (
+            <MessageItem
+              key={`${message.id}-${index}`}
+              message={message}
+              isUserMessage={isUserMsg}
+              isLastMessage={isLast}
+              darkMode={darkMode}
+            />
+          );
+        })}
+      </div>
+    );
+  }, [messages, darkMode, renderWelcomeMessage]);
+
+  return (
+    <div className="w-full h-full bg-gray-50 dark:bg-[#212121]">
+      <div 
+        className="h-full overflow-y-auto px-4 py-2 bg-gray-50 dark:bg-[#212121]"
+        ref={chatContainerRef}
+      >
+        <div className="max-w-3xl mx-auto w-full min-h-full flex flex-col justify-end bg-gray-50 dark:bg-[#212121]">
+          <div className="mt-auto bg-gray-50 dark:bg-[#212121]">
+            {renderMessages}
+          </div>
+          <div ref={(el) => {
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth' });
+            }
+          }} />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ChatArea.displayName = 'ChatArea';
 
 export default ChatArea;

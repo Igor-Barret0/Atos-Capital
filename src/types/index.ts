@@ -15,6 +15,7 @@ export interface MenuItem {
   icon: React.ReactNode;
   label: string;
   active: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 export interface SocialLink {
@@ -57,6 +58,7 @@ export interface SidebarProps {
   activeChat: Chat | null;
   onSelectChat: (chatId: number | null) => void;
   onDeleteChat: (chatId: number) => void;
+  onAddChat?: (chat: Chat) => void;
 }
 
 export interface ChatAreaProps {
