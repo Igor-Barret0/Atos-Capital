@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { generateSql } from './services/api';
 
 // Desabilita o Service Worker em desenvolvimento
 if (process.env.NODE_ENV === 'development' && 'serviceWorker' in navigator) {
@@ -110,7 +111,7 @@ function App(): JSX.Element {
     ];
   };
 
-  const handleSendMessage = (messageText: string): void => {
+  const handleSendMessage = async (messageText: string): Promise<void> => {
     console.log('=== handleSendMessage chamado ===');
     console.log('Mensagem recebida:', messageText);
     
@@ -165,29 +166,106 @@ function App(): JSX.Element {
       return updatedChats;
     });
 
-    // Depois de adicionar a mensagem do usuário, adiciona as respostas do bot
-    const botMessages = createBotMessages(messageText);
-    if (botMessages.length > 0) {
-      console.log('Mensagens do bot a serem adicionadas:', botMessages);
+    // Adiciona mensagem de "digitando..."
+    const typingMessage: Message = {
+      id: Date.now() + 1,
+      text: 'Processando sua consulta...',
+      timestamp: new Date(),
+      sender: 'bot',
+    };
+
+    setChats(prevChats => {
+      const chatIdToUpdate = activeChatId || (prevChats.length > 0 ? prevChats[prevChats.length - 1].id : null);
+      if (!chatIdToUpdate) return prevChats;
       
-      setTimeout(() => {
-        setChats(prevChats => {
-          const chatIdToUpdate = activeChatId || (prevChats.length > 0 ? prevChats[prevChats.length - 1].id : null);
-          if (!chatIdToUpdate) {
-            console.log('Nenhum chat para atualizar com mensagens do bot');
-            return prevChats;
+      return prevChats.map(chat => 
+        chat.id === chatIdToUpdate
+          ? { ...chat, messages: [...chat.messages, typingMessage] }
+          : chat
+      );
+    });
+
+    try {
+      // Chama a API do backend
+      console.log('Chamando API com query:', messageText);
+      const apiResponse = await generateSql(messageText);
+      console.log('Resposta da API:', apiResponse);
+
+      
+      setChats(prevChats => {
+        const chatIdToUpdate = activeChatId || (prevChats.length > 0 ? prevChats[prevChats.length - 1].id : null);
+        if (!chatIdToUpdate) return prevChats;
+        
+        return prevChats.map(chat => {
+          if (chat.id !== chatIdToUpdate) return chat;
+          
+          // Remove a mensagem de "digitando..."
+          const messagesWithoutTyping = chat.messages.filter(msg => msg.id !== typingMessage.id);
+          
+          // Cria mensagens de resposta baseadas na API
+          const botMessages: Message[] = [];
+          
+          if (apiResponse.error) {
+            botMessages.push({
+              id: Date.now() + 2,
+              text: `❌ Erro: ${apiResponse.message || apiResponse.error}`,
+              timestamp: new Date(),
+              sender: 'bot',
+            });
+          } else {
+            if (apiResponse.sql) {
+              botMessages.push({
+                id: Date.now() + 2,
+                text: `📝 SQL gerado:\n\`\`\`sql\n${apiResponse.sql}\n\`\`\``,
+                timestamp: new Date(),
+                sender: 'bot',
+              });
+            }
+            
+            if (apiResponse.data) {
+              botMessages.push({
+                id: Date.now() + 3,
+                text: `✅ Resultado:\n\`\`\`json\n${JSON.stringify(apiResponse.data, null, 2)}\n\`\`\``,
+                timestamp: new Date(),
+                sender: 'bot',
+              });
+            }
+            
+            if (!apiResponse.sql && !apiResponse.data && apiResponse.message) {
+              botMessages.push({
+                id: Date.now() + 2,
+                text: apiResponse.message,
+                timestamp: new Date(),
+                sender: 'bot',
+              });
+            }
           }
           
-          console.log('Atualizando chat', chatIdToUpdate, 'com mensagens do bot');
-          const updatedChats = prevChats.map(chat => 
-            chat.id === chatIdToUpdate
-              ? { ...chat, messages: [...chat.messages, ...botMessages] }
-              : chat
-          );
-          console.log('Chats após adicionar mensagens do bot:', updatedChats);
-          return updatedChats;
+          return { ...chat, messages: [...messagesWithoutTyping, ...botMessages] };
         });
-      }, 500); // Pequeno atraso para simular processamento
+      });
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error);
+
+      // Remove mensagem de "digitando..." e add mensagem de erro
+      setChats(prevChats => {
+        const chatIdToUpdate = activeChatId || (prevChats.length > 0 ? prevChats[prevChats.length - 1].id : null);
+        if (!chatIdToUpdate) return prevChats;
+        
+        return prevChats.map(chat => {
+          if (chat.id !== chatIdToUpdate) return chat;
+          
+          const messagesWithoutTyping = chat.messages.filter(msg => msg.id !== typingMessage.id);
+          const errorMessage: Message = {
+            id: Date.now() + 2,
+            text: '❌ Ocorreu um erro ao processar sua mensagem. Tente novamente.',
+            timestamp: new Date(),
+            sender: 'bot',
+          };
+          
+          return { ...chat, messages: [...messagesWithoutTyping, errorMessage] };
+        });
+      });
     }
   };
 
