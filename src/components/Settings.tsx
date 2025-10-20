@@ -3,8 +3,10 @@ import { Button } from './ui/button';
 import { X, Settings as SettingsIcon, User as UserIcon, Bell as BellIcon } from 'lucide-react';
 import { useLanguage, type Language } from '../contexts/LanguageContext';
 
+
 type TabType = 'general' | 'account' | 'notifications';
 type Theme = 'light' | 'dark' | 'system';
+
 
 const TabButton: React.FC<{
   active: boolean;
@@ -15,8 +17,8 @@ const TabButton: React.FC<{
   <button
     onClick={onClick}
     className={`flex flex-col items-center justify-center w-full py-3 rounded-md transition-colors ${
-      active 
-        ? 'bg-atos-red text-white' 
+      active
+        ? 'bg-atos-red text-white'
         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
     }`}
   >
@@ -25,16 +27,17 @@ const TabButton: React.FC<{
   </button>
 );
 
+
 const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   // Estado para a aba ativa
   const [activeTab, setActiveTab] = useState<TabType>('general');
-  
+ 
   // Estado para o tema
   const [theme, setTheme] = useState<Theme>('light');
-  
+ 
   // Usando o contexto de idioma
   const { language, setLanguage, t } = useLanguage();
-  
+ 
   // Estado para os dados da conta
   const [account] = useState({
     name: 'Usuário',
@@ -43,6 +46,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     profileImage: ''
   });
 
+
   // Estado para notificações
   const [notifications, setNotifications] = useState({
     email: true,
@@ -50,22 +54,26 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     sound: true
   });
 
+
   // Carregar configurações salvas
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
     if (savedTheme) setTheme(savedTheme);
 
+
     const savedLanguage = localStorage.getItem('language');
     if (savedLanguage) setLanguage(savedLanguage as Language);
+
 
     const savedNotifications = localStorage.getItem('notifications');
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
   }, [setLanguage]);
 
+
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    
+   
     if (newTheme === 'system') {
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.classList.toggle('dark', isDark);
@@ -74,15 +82,18 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
+
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
   };
+
 
   const handleNotificationChange = (type: keyof typeof notifications, checked: boolean) => {
     const updatedNotifications = { ...notifications, [type]: checked };
     setNotifications(updatedNotifications);
     localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
   };
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -92,7 +103,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               {t('settings.general')}
             </h3>
-            
+           
             {/* Seção de Tema */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -115,6 +126,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   <p className="text-sm font-medium text-center mt-2">{t('settings.light')}</p>
                 </button>
 
+
                 {/* Tema Escuro */}
                 <button
                   onClick={() => handleThemeChange('dark')}
@@ -130,6 +142,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   </div>
                   <p className="text-sm font-medium text-center mt-2">{t('settings.dark')}</p>
                 </button>
+
 
                 {/* Tema do Sistema */}
                 <button
@@ -148,6 +161,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </button>
               </div>
             </div>
+
 
             {/* Seletor de Idioma */}
             <div>
@@ -169,13 +183,13 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         );
-      
+     
       case 'account':
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             </h3>
-            
+           
             <div className="space-y-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
               <div className="flex items-center">
                 <div className="w-full">
@@ -184,28 +198,30 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
               </div>
 
+
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('account.email')}</h4>
                   <p className="text-base font-medium text-gray-900 dark:text-gray-300"></p>
                   <div className="border-t border-gray-200 dark:border-gray-700 mt-4"></div>
                 </div>
-                
+               
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('account.phone')}</h4>
                   <p className="text-base text-gray-900 dark:text-gray-300"></p>
                 </div>
               </div>
 
+
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
-                <button 
+                <button
                   className="w-full text-left text-atos-red hover:text-atos-red/90 text-sm font-medium py-2 px-3 -mx-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                   onClick={() => console.log('Log out of all devices')}
                 >
                   {t('account.logoutAll')}
                 </button>
-                
-                <button 
+               
+                <button
                   className="w-full text-left text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 text-sm font-medium py-2 px-3 -mx-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                   onClick={() => {
                     if (window.confirm(t('account.deleteConfirm'))) {
@@ -219,14 +235,14 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         );
-      
+     
       case 'notifications':
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               {t('settings.notifications')}
             </h3>
-            
+           
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -242,7 +258,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-atos-red"></div>
                 </label>
               </div>
-              
+             
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('settings.pushNotifications')}
@@ -257,7 +273,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-atos-red"></div>
                 </label>
               </div>
-              
+             
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('settings.sound')}
@@ -275,11 +291,12 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         );
-      
+     
       default:
         return null;
     }
   };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
@@ -298,7 +315,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <X className="h-6 w-6" />
           </button>
         </div>
-        
+       
         {/* Conteúdo com rolagem */}
         <div className="flex flex-1 overflow-hidden">
           {/* Navegação lateral */}
@@ -322,7 +339,7 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               onClick={() => setActiveTab('notifications')}
             />
           </div>
-          
+         
           {/* Conteúdo da aba com rolagem */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-3xl mx-auto">
@@ -330,11 +347,12 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         </div>
-        
+       
         {/* Rodapé removido */}
       </div>
     </div>
   );
 };
+
 
 export default Settings;
