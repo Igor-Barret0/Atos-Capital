@@ -223,12 +223,101 @@ function App(): JSX.Element {
             }
             
             if (apiResponse.data) {
-              botMessages.push({
-                id: Date.now() + 3,
-                text: `✅ Resultado:\n\`\`\`json\n${JSON.stringify(apiResponse.data, null, 2)}\n\`\`\``,
-                timestamp: new Date(),
-                sender: 'bot',
-              });
+              const rows = Array.isArray(apiResponse.data) ? apiResponse.data : [];
+
+              if (rows.length === 0) {
+                botMessages.push({
+                  id: Date.now() + 3,
+                  text: '✅ Resultado: nenhum registro encontrado para essa consulta.',
+                  timestamp: new Date(),
+                  sender: 'bot',
+                });
+              } else {
+                // Sumário amigável
+                const columns = Object.keys(rows[0] || {});
+                const sample = rows.slice(0, 5);
+                const summaryText = `✅ Resultado: encontrei ${rows.length} registros. Colunas: ${columns.join(', ')}. Exemplo:\n${JSON.stringify(sample, null, 2)}`;
+
+                botMessages.push({
+                  id: Date.now() + 3,
+                  text: summaryText,
+                  timestamp: new Date(),
+                  sender: 'bot',
+                });
+
+                // Mensagem com os dados completos (limitados) — usada pelo DataViewer
+                const fullRows = rows.slice(0, 500); // limita para evitar payloads gigantes
+                botMessages.push({
+                  id: Date.now() + 4,
+                  text: 'Tabela de resultados',
+                  timestamp: new Date(),
+                  sender: 'bot',
+                  payload: fullRows,
+                  meta: { type: 'table', title: 'Resultados da consulta' }
+                });
+
+                // Heurística para gráfico: procura uma coluna categórica e uma numérica
+                const detectCols = () => {
+                  // Prioriza pares conhecidos (ex.: statuspedido + valortotal)
+                  const preferredPairs: Array<{ categorical: string; numeric: string }> = [
+                    { categorical: 'statuspedido', numeric: 'valortotal' },
+                    { categorical: 'clienteid', numeric: 'valortotal' },
+                    { categorical: 'vendedorid', numeric: 'valortotal' },
+                  ];
+
+                  for (const p of preferredPairs) {
+                    if (columns.includes(p.categorical) && columns.includes(p.numeric)) {
+                      return { numericCol: p.numeric, categoricalCol: p.categorical };
+                    }
+                  }
+
+                  const maxSample = Math.min(rows.length, 50);
+                  const sampleRows = rows.slice(0, maxSample);
+                  const colStats: Record<string, { numericCount: number; unique: Set<any> }> = {};
+                  columns.forEach(col => { colStats[col] = { numericCount: 0, unique: new Set() }; });
+
+                  sampleRows.forEach(r => {
+                    columns.forEach(col => {
+                      const v = r[col];
+                      if (v === null || v === undefined) return;
+                      if (typeof v === 'number') colStats[col].numericCount += 1;
+                      // tentar interpretar strings numéricas
+                      if (typeof v === 'string' && !isNaN(Number(v))) colStats[col].numericCount += 1;
+                      colStats[col].unique.add(String(v));
+                    });
+                  });
+
+                  const numericCol = columns.find(c => colStats[c].numericCount > (maxSample * 0.4));
+                  const categoricalCol = columns.find(c => colStats[c].unique.size > 1 && colStats[c].unique.size <= 50 && colStats[c].numericCount < (maxSample * 0.5));
+                  return { numericCol, categoricalCol };
+                };
+
+                const { numericCol, categoricalCol } = detectCols();
+
+                if (numericCol && categoricalCol) {
+                  // Agrupa por categórica e soma a numérica
+                  const grouped: Record<string, number> = {};
+                  rows.forEach(r => {
+                    const cat = String(r[categoricalCol] ?? 'N/A');
+                    const val = Number(r[numericCol]) || 0;
+                    grouped[cat] = (grouped[cat] || 0) + val;
+                  });
+
+                  const chartData = Object.entries(grouped)
+                    .map(([name, value]) => ({ name, value }))
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 12);
+
+                  botMessages.push({
+                    id: Date.now() + 5,
+                    text: `Gráfico: ${numericCol} por ${categoricalCol}`,
+                    timestamp: new Date(),
+                    sender: 'bot',
+                    payload: chartData,
+                    meta: { type: 'chart', chartType: 'bar', title: `Soma de ${numericCol} por ${categoricalCol}` }
+                  });
+                }
+              }
             }
             
             if (!apiResponse.sql && !apiResponse.data && apiResponse.message) {

@@ -1,7 +1,8 @@
-const API_BASE_URL = 'http://34.204.197.228:8090';
+const API_BASE_URL = 'http://localhost:5078';
 
 export interface SqlGenerateRequest {
-  query: string;
+  prompt: string;
+  returnData?: boolean;
 }
 
 export interface SqlGenerateResponse {
@@ -13,9 +14,8 @@ export interface SqlGenerateResponse {
 }
 
 /**
- * Chama a API de geração de SQL do backend  --perguntar sobre CORS pra Brísio ou Hugo!!!
- * @param prompt A mensagem/pergunta do usuário
- * @returns A resposta da API com o SQL gerado e/ou resultado
+ * Chama a API de geração de SQL do backend.
+ * @param prompt A mensagem/pergunta do usuário.
  */
 export async function generateSql(prompt: string): Promise<SqlGenerateResponse> {
   try {
@@ -24,33 +24,34 @@ export async function generateSql(prompt: string): Promise<SqlGenerateResponse> 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, returnData: true }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `Erro na API: ${response.status}`);
+      const errorData = await response.text();
+      throw new Error(errorData || `Erro na API: ${response.status}`);
     }
 
-    const data = await response.json();
-    // Garante que o objeto retornado sempre tenha as chaves esperadas
-    return {
-      sql: data.sql,
-      explanation: data.explanation,
-      data: data.data,
-      error: data.error,
-      message: data.message,
-    };
+    const text = await response.text();
+    let data: SqlGenerateResponse;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+
+    return data;
   } catch (error) {
     console.error('Erro ao chamar API:', error);
-    
+
     if (error instanceof Error) {
       return {
         error: error.message,
         message: 'Não foi possível conectar com o servidor. Tente novamente.',
       };
     }
-    
+
     return {
       error: 'Erro desconhecido',
       message: 'Ocorreu um erro inesperado. Tente novamente.',

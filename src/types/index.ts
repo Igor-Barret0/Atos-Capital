@@ -3,6 +3,14 @@ export interface Message {
   text: string;
   timestamp: Date;
   sender: 'user' | 'bot';
+  // Payload para mensagens estruturadas (gráficos, tabelas, dados)
+  payload?: any;
+  // Meta descreve como renderizar o payload: 'chart' | 'table' | 'text'
+  meta?: {
+    type?: 'chart' | 'table' | 'text';
+    chartType?: 'bar' | 'line' | 'pie' | 'scatter';
+    title?: string;
+  };
 }
 
 export interface Chat {

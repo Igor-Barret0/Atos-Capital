@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { Message } from '../types';
 import MockedChart from './charts/MockedChart';
+import DynamicChart from './charts/DynamicChart';
 
 interface ChatAreaProps {
   messages: Message[];
@@ -31,6 +32,7 @@ const MessageItem = React.memo(({
   const renderContent = useCallback((text: string) => {
     if (!text) return null;
     
+    // If text is a chart token (legacy), render MockedChart
     if (typeof text === 'string' && text.startsWith('[CHART:') && text.endsWith(']')) {
       return <MockedChart chartType={text.slice(7, -1) as any} />;
     }
@@ -40,6 +42,27 @@ const MessageItem = React.memo(({
         {line}
       </p>
     ));
+  }, []);
+
+  // Novo: renderiza payload/meta quando presentes
+  const renderStructured = useCallback((message: any) => {
+    if (!message) return null;
+    if (message.meta && message.meta.type === 'chart' && message.payload) {
+      const chartType = message.meta.chartType || 'bar';
+      return <DynamicChart chartType={chartType} data={message.payload} title={message.meta.title} />;
+    }
+
+    if (message.meta && message.meta.type === 'table' && message.payload) {
+      const rows = Array.isArray(message.payload) ? message.payload : [];
+      if (rows.length === 0) return <div className="text-sm text-gray-500">Nenhum registro para mostrar.</div>;
+      // use DataViewer to allow user controls
+      // lazy-load component or render directly
+      // @ts-ignore - Dynamic import not necessary here
+      const DataViewer = require('./DataViewer').default as any;
+      return <DataViewer rows={rows} title={message.meta.title || 'Tabela de resultados'} />;
+    }
+
+    return null;
   }, []);
 
   return (
@@ -73,7 +96,7 @@ const MessageItem = React.memo(({
             ? 'text-gray-800' 
             : 'text-gray-800'
         }`}>
-          {renderContent(message.text)}
+          {message.payload || (message.meta && message.meta.type) ? renderStructured(message) : renderContent(message.text)}
         </div>
       </div>
       
