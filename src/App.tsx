@@ -213,30 +213,27 @@ function App(): JSX.Element {
               sender: 'bot',
             });
           } else {
-            if (apiResponse.sql) {
-              botMessages.push({
-                id: Date.now() + 2,
-                text: `📝 SQL gerado:\n\`\`\`sql\n${apiResponse.sql}\n\`\`\``,
-                timestamp: new Date(),
-                sender: 'bot',
-              });
-            }
+            // Não exibir o SQL cru no chat — mantemos apenas uma resposta em texto
+            // A explicação do backend (apiResponse.explanation) será incorporada ao texto resumido abaixo quando disponível.
             
             if (apiResponse.data) {
               const rows = Array.isArray(apiResponse.data) ? apiResponse.data : [];
 
               if (rows.length === 0) {
+                // Use explanation if disponível para uma resposta mais útil
+                const explanation = apiResponse.explanation ? `${apiResponse.explanation}\n\n` : '';
                 botMessages.push({
                   id: Date.now() + 3,
-                  text: '✅ Resultado: nenhum registro encontrado para essa consulta.',
+                  text: `${explanation}✅ Resultado: nenhum registro encontrado para essa consulta. Você pode refinar a consulta ou solicitar outra visão.`,
                   timestamp: new Date(),
                   sender: 'bot',
                 });
               } else {
-                // Sumário amigável
+                // Sumário amigável + explicação (se houver)
                 const columns = Object.keys(rows[0] || {});
                 const sample = rows.slice(0, 5);
-                const summaryText = `✅ Resultado: encontrei ${rows.length} registros. Colunas: ${columns.join(', ')}. Exemplo:\n${JSON.stringify(sample, null, 2)}`;
+                const explanation = apiResponse.explanation ? `${apiResponse.explanation}\n\n` : '';
+                const summaryText = `${explanation}✅ Resultado: encontrei ${rows.length} registros. Colunas: ${columns.join(', ')}. Aqui vai um exemplo dos primeiros registros:`;
 
                 botMessages.push({
                   id: Date.now() + 3,
