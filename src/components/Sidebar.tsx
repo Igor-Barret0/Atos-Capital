@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SidebarProps, MenuItem, ContextMenuState, DeleteConfirmationState } from '../types';
 import { Button } from './ui/button';
-import { MessageCircle, FileText, Menu, MoreVertical, Trash2, ChevronDown, User, Settings, LogOut as LogOutIcon, ArrowUpRight } from 'lucide-react';
+import { MessageCircle, FileText, Menu, MoreVertical, Trash2, ChevronDown, User, Settings, LogOut as LogOutIcon, ArrowUpRight, HelpCircle } from 'lucide-react';
 import ContextMenu from './ContextMenu';
 import DeleteConfirmation from './DeleteConfirmation';
 import dynamic from 'next/dynamic';
@@ -222,6 +222,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, toggleSidebar, chats, acti
             <button onClick={() => { setShowSettings(true); setShowUserMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
               <Settings className="w-4 h-4 mr-4" />
               Configurações
+            </button>
+            <button onClick={() => { setShowSettings(true); setShowUserMenu(false); }} className="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <HelpCircle className="w-4 h-4 mr-4" />
+              Ajuda
             </button>
             <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
               <LogOutIcon className="w-4 h-4 mr-4" />

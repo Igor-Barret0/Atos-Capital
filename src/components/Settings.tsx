@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { X, Settings as SettingsIcon, User as UserIcon, Bell as BellIcon } from 'lucide-react';
+import { X, Settings as SettingsIcon, User as UserIcon, HelpCircle, Bell as BellIcon } from 'lucide-react';
 import { useLanguage, type Language } from '../contexts/LanguageContext';
 
 
-type TabType = 'general' | 'account' | 'notifications';
+type TabType = 'general' | 'account' |  'help' | 'notifications';
 type Theme = 'light' | 'dark' | 'system';
 
 
@@ -235,6 +235,64 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         );
+
+      case 'help':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              Ajuda e Perguntas Frequentes
+            </h3>
+
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+              <h4 className="text-base font-semibold text-atos-red">
+                Como o chat funciona?
+              </h4>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                O chat é o espaço onde você pode conversar com a plataforma para tirar dúvidas e analisar informações.
+                Basta digitar o que deseja saber, e o sistema retorna respostas e gráficos personalizados com base nos seus dados.
+                Assim, você pode explorar resultados, gerar insights e acompanhar indicadores de forma simples, prática e interativa.
+              </p>
+            </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h4 className="text-base font-semibold text-atos-red">
+                  Como altero meu idioma?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                  Vá até a aba “Geral” e selecione o idioma desejado no menu de idiomas.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h4 className="text-base font-semibold text-atos-red">
+                  Como mudar o tema do aplicativo?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                  Na aba “Geral”, você pode escolher entre o tema claro, escuro ou seguir o tema do sistema.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h4 className="text-base font-semibold text-atos-red">
+                  Esqueci minha senha. O que fazer?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                  Clique em “Esqueci minha senha” na tela de login e siga as instruções enviadas ao seu e-mail.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h4 className="text-base font-semibold text-atos-red">
+                  Como entro em contato com o suporte?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                  Caso precise de ajuda adicional, envie um e-mail para suporte@exemplo.com.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
      
       case 'notifications':
         return (
@@ -331,6 +389,12 @@ const Settings: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               icon={<UserIcon className={`h-5 w-5 ${activeTab === 'account' ? 'text-white' : 'text-gray-700 dark:text-atos-red'}`} />}
               label={t('settings.account')}
               onClick={() => setActiveTab('account')}
+            />
+            <TabButton
+              active={activeTab === 'help'}
+              icon={<HelpCircle className="h-5 w-5" />}
+              label="Ajuda"
+              onClick={() => setActiveTab('help')}
             />
             <TabButton
               active={activeTab === 'notifications'}
