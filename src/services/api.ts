@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5078';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5078';
 
 export interface SqlGenerateRequest {
   prompt: string;
